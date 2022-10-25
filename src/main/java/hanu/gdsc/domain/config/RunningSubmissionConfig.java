@@ -1,7 +1,7 @@
 package hanu.gdsc.domain.config;
 
 public interface RunningSubmissionConfig {
-    public int getMaxProcessingThread();
+    public int getMaxJudgingThread();
 
     public int getScanRateMillis();
 

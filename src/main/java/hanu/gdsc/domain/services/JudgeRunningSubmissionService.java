@@ -1,6 +1,6 @@
 package hanu.gdsc.domain.services;
 
-import hanu.gdsc.domain.config.*;
+import hanu.gdsc.domain.config.RunningSubmissionConfig;
 import hanu.gdsc.domain.models.*;
 import hanu.gdsc.domain.repositories.*;
 import hanu.gdsc.domain.vm.VirtualMachine;
@@ -39,7 +39,7 @@ public class JudgeRunningSubmissionService {
         this.submissionEventRepository = submissionEventRepository;
         this.runningSubmissionConfig = runningSubmissionConfig;
 
-        executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(runningSubmissionConfig.getMaxProcessingThread());
+        executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(runningSubmissionConfig.getMaxJudgingThread());
         new Scheduler(runningSubmissionConfig.getScanRateMillis(), new Scheduler.Runner() {
             @Override
             protected void run() throws Throwable {
@@ -48,8 +48,17 @@ public class JudgeRunningSubmissionService {
         }).start();
     }
 
+    public int judgingThread() {
+        return executor.getActiveCount();
+    }
+
+    public int maxJudgingThread() {
+        return executor.getPoolSize();
+    }
+
+
     private boolean allThreadsAreActive() {
-        return executor.getActiveCount() == runningSubmissionConfig.getMaxProcessingThread();
+        return executor.getActiveCount() == runningSubmissionConfig.getMaxJudgingThread();
     }
 
     private synchronized void process() {
@@ -60,7 +69,7 @@ public class JudgeRunningSubmissionService {
                     @Override
                     public void run() {
                         try {
-                            processSubmission(runningSubmission);
+                            judgeSubmission(runningSubmission);
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
@@ -70,7 +79,7 @@ public class JudgeRunningSubmissionService {
         }
     }
 
-    private void processSubmission(RunningSubmission runningSubmission) throws IOException, InterruptedException {
+    private void judgeSubmission(RunningSubmission runningSubmission) throws IOException, InterruptedException {
         List<TestCase> testCases = TestCase.sortByOrdinal(
                 testCaseRepository.getByProblemId(
                         runningSubmission.getProblemId(),

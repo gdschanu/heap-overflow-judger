@@ -37,7 +37,7 @@ public class RunningSubmissionConfigImpl implements RunningSubmissionConfig {
     }
 
     @Override
-    public int getMaxProcessingThread() {
+    public int getMaxJudgingThread() {
         return MAX_THREAD;
     }
 
