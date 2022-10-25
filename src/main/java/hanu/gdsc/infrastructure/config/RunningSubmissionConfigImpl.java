@@ -16,23 +16,23 @@ public class RunningSubmissionConfigImpl implements RunningSubmissionConfig {
     private static String VM_USER = "yowtf";
 
     public RunningSubmissionConfigImpl(Environment environment) {
-        if (environment.getProperty("coreproblem.runningsubmission.maxthread") != null) {
-            MAX_THREAD = Integer.parseInt(environment.getProperty("coreproblem.runningsubmission.maxthread"));
+        if (environment.getProperty("runningsubmission.maxthread") != null) {
+            MAX_THREAD = Integer.parseInt(environment.getProperty("runningsubmission.maxthread"));
         }
-        if (environment.getProperty("coreproblem.runningsubmission.scanratemillis") != null) {
-            SCAN_RATE_MILLIS = Integer.parseInt(environment.getProperty("coreproblem.runningsubmission.scanratemillis"));
+        if (environment.getProperty("runningsubmission.scanratemillis") != null) {
+            SCAN_RATE_MILLIS = Integer.parseInt(environment.getProperty("runningsubmission.scanratemillis"));
         }
-        if (environment.getProperty("coreproblem.runningsubmission.scanlocksecond") != null) {
-            SCAN_LOCK_SECOND = Integer.parseInt(environment.getProperty("coreproblem.runningsubmission.scanlocksecond"));
+        if (environment.getProperty("runningsubmission.scanlocksecond") != null) {
+            SCAN_LOCK_SECOND = Integer.parseInt(environment.getProperty("runningsubmission.scanlocksecond"));
         }
-        if (environment.getProperty("coreproblem.runningsubmission.vmurl") != null) {
-            VM_URL = environment.getProperty("coreproblem.runningsubmission.vmurl");
+        if (environment.getProperty("runningsubmission.vmurl") != null) {
+            VM_URL = environment.getProperty("runningsubmission.vmurl");
         }
-        if (environment.getProperty("coreproblem.runningsubmission.vmtoken") != null) {
-            VM_TOKEN = environment.getProperty("coreproblem.runningsubmission.vmtoken");
+        if (environment.getProperty("runningsubmission.vmtoken") != null) {
+            VM_TOKEN = environment.getProperty("runningsubmission.vmtoken");
         }
-        if (environment.getProperty("coreproblem.runningsubmission.vmuser") != null) {
-            VM_USER = environment.getProperty("coreproblem.runningsubmission.vmuser");
+        if (environment.getProperty("runningsubmission.vmuser") != null) {
+            VM_USER = environment.getProperty("runningsubmission.vmuser");
         }
     }
 
