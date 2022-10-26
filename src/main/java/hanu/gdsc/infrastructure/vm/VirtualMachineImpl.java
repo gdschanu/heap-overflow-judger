@@ -7,7 +7,6 @@ import hanu.gdsc.domain.models.Millisecond;
 import hanu.gdsc.domain.models.ProgrammingLanguage;
 import hanu.gdsc.domain.models.TimeLimit;
 import hanu.gdsc.domain.vm.VirtualMachine;
-import hanu.gdsc.domain.vm.VirtualMachine;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -59,7 +58,7 @@ public class VirtualMachineImpl implements VirtualMachine {
     }
 
 
-    public Submission createSubmission(String code, String input, ProgrammingLanguage programmingLanguage) throws IOException, InterruptedException {
+    public RunResult run(String code, String input, ProgrammingLanguage programmingLanguage) throws IOException, InterruptedException {
         CreateSubmissionRequest request = new CreateSubmissionRequest();
         request.language_id = getJudge0ProgrammingLanguageId(programmingLanguage);
         request.source_code = new String(Base64.getEncoder().encode(code.getBytes()));
@@ -77,7 +76,7 @@ public class VirtualMachineImpl implements VirtualMachine {
         if (response.statusCode() == 201)
             deleteSubmission(submission.token);
         else {
-            return new SubmissionImpl(
+            return new RunResultImpl(
                     "",
                     null,
                     null,
@@ -87,7 +86,7 @@ public class VirtualMachineImpl implements VirtualMachine {
                     response.body()
             );
         }
-        return new SubmissionImpl(
+        return new RunResultImpl(
                 base64Decode(submission.stdout),
                 submission.time,
                 submission.memory,
@@ -112,7 +111,7 @@ public class VirtualMachineImpl implements VirtualMachine {
         return 0;
     }
 
-    public static class SubmissionImpl implements Submission {
+    public static class RunResultImpl implements RunResult {
         private String stdout;
         private String time;
         private String memory;
@@ -122,13 +121,13 @@ public class VirtualMachineImpl implements VirtualMachine {
 
         private String stdMessage;
 
-        public SubmissionImpl(String stdout,
-                              String time,
-                              String memory,
-                              String stderr,
-                              String compileOutput,
-                              int status,
-                              String stdMessage) {
+        public RunResultImpl(String stdout,
+                             String time,
+                             String memory,
+                             String stderr,
+                             String compileOutput,
+                             int status,
+                             String stdMessage) {
             this.stdout = stdout;
             this.time = time;
             this.memory = memory;

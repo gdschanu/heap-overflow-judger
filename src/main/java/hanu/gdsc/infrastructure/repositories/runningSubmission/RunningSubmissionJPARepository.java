@@ -6,12 +6,16 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
+
 public interface RunningSubmissionJPARepository extends JpaRepository<RunningSubmissionEntity, String> {
-    @Query(value = "SELECT * FROM core_problem_running_submission u " +
-            "WHERE ( (u.locked = 0) or (u.locked_until < :currentMillis) ) " +
-            "ORDER BY submitted_at DESC LIMIT 1",
+    @Query(value = " SELECT * FROM core_problem_running_submission u " +
+            " WHERE ( (u.locked = 0) or (u.locked_until < :currentMillis) ) " +
+            " AND u.service_to_create IN (:serviceToCreate) " +
+            " ORDER BY submitted_at DESC LIMIT 1",
             nativeQuery = true)
-    public RunningSubmissionEntity claim(@Param("currentMillis") long currentMillis);
+    public RunningSubmissionEntity claim(@Param("currentMillis") long currentMillis,
+                                         @Param("serviceToCreate") List<String> serviceToCreate);
 
     public Page<RunningSubmissionEntity> findByProblemIdAndCoderIdAndServiceToCreate(String problemId, String coderId, String serviceToCreate, Pageable pageable);
 

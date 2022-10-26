@@ -7,7 +7,7 @@ import hanu.gdsc.domain.models.ProgrammingLanguage;
 import java.io.IOException;
 
 public interface VirtualMachine {
-    public static interface Submission {
+    public static interface RunResult {
         public boolean compilationError();
         public String compilationMessage();
         public boolean stdError();
@@ -17,5 +17,5 @@ public interface VirtualMachine {
         public String output();
     }
 
-    public Submission createSubmission(String code, String input, ProgrammingLanguage programmingLanguage) throws IOException, InterruptedException;
+    public RunResult run(String code, String input, ProgrammingLanguage programmingLanguage) throws IOException, InterruptedException;
 }

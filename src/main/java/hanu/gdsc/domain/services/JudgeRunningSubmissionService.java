@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -23,14 +24,19 @@ public class JudgeRunningSubmissionService {
     private final SubmissionRepository submissionRepository;
     private final SubmissionEventRepository submissionEventRepository;
     private final RunningSubmissionConfig runningSubmissionConfig;
+    private boolean temporaryStop = false;
+    private final String CONTEST_SERVICE_TO_CREATE = "contest";
+    private final String PRACTICE_PROBLEM_SERVICE_TO_CREATE = "PracticeProblemService";
+    private final List<String> serviceToCreates = Arrays.asList(CONTEST_SERVICE_TO_CREATE,
+            PRACTICE_PROBLEM_SERVICE_TO_CREATE);
 
     public JudgeRunningSubmissionService(RunningSubmissionRepository runningSubmissionRepository,
-                                           TestCaseRepository testCaseRepository,
-                                           VirtualMachine virtualMachine,
-                                           ProblemRepository problemRepository,
-                                           SubmissionRepository submissionRepository,
-                                           SubmissionEventRepository submissionEventRepository,
-                                           RunningSubmissionConfig runningSubmissionConfig) {
+                                         TestCaseRepository testCaseRepository,
+                                         VirtualMachine virtualMachine,
+                                         ProblemRepository problemRepository,
+                                         SubmissionRepository submissionRepository,
+                                         SubmissionEventRepository submissionEventRepository,
+                                         RunningSubmissionConfig runningSubmissionConfig) {
         this.runningSubmissionRepository = runningSubmissionRepository;
         this.testCaseRepository = testCaseRepository;
         this.virtualMachine = virtualMachine;
@@ -56,26 +62,50 @@ public class JudgeRunningSubmissionService {
         return executor.getPoolSize();
     }
 
+    public void updateMaxJudgingThread(int maxJudgingThread) {
+        temporaryStop = true;
+        while (judgingThread() > 0) ;
+        executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(maxJudgingThread);
+        temporaryStop = false;
+    }
+
+    public void enableJudgeContest() {
+        serviceToCreates.add(CONTEST_SERVICE_TO_CREATE);
+    }
+
+    public void disableJudgeContest() {
+        serviceToCreates.remove(CONTEST_SERVICE_TO_CREATE);
+    }
+
+    public void enableJudgePracticeProblem() {
+        serviceToCreates.add(PRACTICE_PROBLEM_SERVICE_TO_CREATE);
+    }
+
+    public void disableJudgePracticeProblem() {
+        serviceToCreates.add(PRACTICE_PROBLEM_SERVICE_TO_CREATE);
+    }
 
     private boolean allThreadsAreActive() {
         return executor.getActiveCount() == runningSubmissionConfig.getMaxJudgingThread();
     }
 
     private synchronized void process() {
-        if (!allThreadsAreActive()) {
-            RunningSubmission runningSubmission = runningSubmissionRepository.claim();
-            if (runningSubmission != null) {
-                executor.submit(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            judgeSubmission(runningSubmission);
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
+        if (temporaryStop)
+            return;
+        if (allThreadsAreActive())
+            return;
+        RunningSubmission runningSubmission = runningSubmissionRepository.claim(serviceToCreates);
+        if (runningSubmission != null) {
+            executor.submit(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        judgeSubmission(runningSubmission);
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
-                });
-            }
+                }
+            });
         }
     }
 
@@ -108,13 +138,13 @@ public class JudgeRunningSubmissionService {
             TimeLimit timeLimit = problem.getTimeLimitByProgrammingLanguage(
                     runningSubmission.getProgrammingLanguage()
             );
-            VirtualMachine.Submission judgeSubmission = virtualMachine.createSubmission(
+            VirtualMachine.RunResult runResult = virtualMachine.run(
                     runningSubmission.getCode(),
                     testCase.getInput(),
                     runningSubmission.getProgrammingLanguage()
             );
-            maxMem = KB.max(maxMem, judgeSubmission.memory());
-            maxRunTime = Millisecond.max(maxRunTime, judgeSubmission.runTime());
+            maxMem = KB.max(maxMem, runResult.memory());
+            maxRunTime = Millisecond.max(maxRunTime, runResult.runTime());
             Submission submission = null;
             if (memoryLimit == null) {
                 submission = Submission.createWithId(
@@ -152,7 +182,7 @@ public class JudgeRunningSubmissionService {
                         runningSubmission.getCoderId(),
                         "No time limit."
                 );
-            } else if (judgeSubmission.compilationError()) {
+            } else if (runResult.compilationError()) {
                 submission = Submission.createWithId(
                         runningSubmission.getId(),
                         runningSubmission.getProblemId(),
@@ -168,9 +198,9 @@ public class JudgeRunningSubmissionService {
                         ),
                         runningSubmission.getServiceToCreate(),
                         runningSubmission.getCoderId(),
-                        judgeSubmission.compilationMessage()
+                        runResult.compilationMessage()
                 );
-            } else if (judgeSubmission.stdError()) {
+            } else if (runResult.stdError()) {
                 submission = Submission.createWithId(
                         runningSubmission.getId(),
                         runningSubmission.getProblemId(),
@@ -186,9 +216,9 @@ public class JudgeRunningSubmissionService {
                         ),
                         runningSubmission.getServiceToCreate(),
                         runningSubmission.getCoderId(),
-                        judgeSubmission.stdMessage()
+                        runResult.stdMessage()
                 );
-            } else if (judgeSubmission.memory().greaterThan(memoryLimit.getMemoryLimit())) {
+            } else if (runResult.memory().greaterThan(memoryLimit.getMemoryLimit())) {
                 submission = Submission.createWithId(
                         runningSubmission.getId(),
                         runningSubmission.getProblemId(),
@@ -199,14 +229,14 @@ public class JudgeRunningSubmissionService {
                         Status.MLE,
                         FailedTestCaseDetail.fromTestCase(
                                 0,
-                                judgeSubmission.output().toString(),
+                                runResult.output().toString(),
                                 testCase
                         ),
                         runningSubmission.getServiceToCreate(),
                         runningSubmission.getCoderId(),
-                        judgeSubmission.stdMessage()
+                        runResult.stdMessage()
                 );
-            } else if (judgeSubmission.runTime().greaterThan(timeLimit.getTimeLimit())) {
+            } else if (runResult.runTime().greaterThan(timeLimit.getTimeLimit())) {
                 submission = Submission.createWithId(
                         runningSubmission.getId(),
                         runningSubmission.getProblemId(),
@@ -217,17 +247,17 @@ public class JudgeRunningSubmissionService {
                         Status.TLE,
                         FailedTestCaseDetail.fromTestCase(
                                 0,
-                                judgeSubmission.output().toString(),
+                                runResult.output().toString(),
                                 testCase
                         ),
                         runningSubmission.getServiceToCreate(),
                         runningSubmission.getCoderId(),
-                        judgeSubmission.stdMessage()
+                        runResult.stdMessage()
                 );
             } else {
                 OutputComparator.CompareResult compareResult = OutputComparator.compare(
                         testCase.getExpectedOutput(),
-                        judgeSubmission.output()
+                        runResult.output()
                 );
                 if (!compareResult.equal) {
                     submission = Submission.createWithId(
@@ -240,12 +270,12 @@ public class JudgeRunningSubmissionService {
                             Status.WA,
                             FailedTestCaseDetail.fromTestCase(
                                     compareResult.differentLine,
-                                    judgeSubmission.output().toString(),
+                                    runResult.output().toString(),
                                     testCase
                             ),
                             runningSubmission.getServiceToCreate(),
                             runningSubmission.getCoderId(),
-                            judgeSubmission.stdMessage()
+                            runResult.stdMessage()
                     );
                 } else {
                     submission = Submission.createWithId(
@@ -259,7 +289,7 @@ public class JudgeRunningSubmissionService {
                             null,
                             runningSubmission.getServiceToCreate(),
                             runningSubmission.getCoderId(),
-                            judgeSubmission.stdMessage()
+                            runResult.stdMessage()
                     );
                 }
             }
