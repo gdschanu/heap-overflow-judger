@@ -39,24 +39,28 @@ public class Submission extends IdentifiedDomainObject {
         this.message = message;
     }
 
-    public static Submission createWithId(Id id, Id problemId, ProgrammingLanguage programmingLanguage, Millisecond runTime, KB memory,
-                                          String code, Status status, FailedTestCaseDetail failedTestCaseDetail,
-                                          String serviceToCreate, Id coderId, String message) {
+    public static Submission fromRunningSubmission(RunningSubmission runningSubmission,
+                                                   Millisecond runTime,
+                                                   KB memory,
+                                                   Status status,
+                                                   FailedTestCaseDetail failedTestCaseDetail,
+                                                   String message) {
         return new Submission(
-                id,
-                problemId,
-                programmingLanguage,
+                runningSubmission.getId(),
+                runningSubmission.getProblemId(),
+                runningSubmission.getProgrammingLanguage(),
                 runTime,
                 memory,
                 DateTime.now(),
-                code,
+                runningSubmission.getCode(),
                 status,
                 failedTestCaseDetail,
-                serviceToCreate,
-                coderId,
+                runningSubmission.getServiceToCreate(),
+                runningSubmission.getCoderId(),
                 message
         );
     }
+
 
     public Id getCoderId() {
         return coderId;

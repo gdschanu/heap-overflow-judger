@@ -24,11 +24,10 @@ public class JudgeRunningSubmissionService {
     private final SubmissionRepository submissionRepository;
     private final SubmissionEventRepository submissionEventRepository;
     private final RunningSubmissionConfig runningSubmissionConfig;
-    private boolean temporaryStop = false;
+    private boolean temporaryStopJudging = false;
     private final String CONTEST_SERVICE_TO_CREATE = "contest";
     private final String PRACTICE_PROBLEM_SERVICE_TO_CREATE = "PracticeProblemService";
-    private final List<String> serviceToCreates = Arrays.asList(CONTEST_SERVICE_TO_CREATE,
-            PRACTICE_PROBLEM_SERVICE_TO_CREATE);
+    private final List<String> serviceToCreates = Arrays.asList(CONTEST_SERVICE_TO_CREATE, PRACTICE_PROBLEM_SERVICE_TO_CREATE);
 
     public JudgeRunningSubmissionService(RunningSubmissionRepository runningSubmissionRepository,
                                          TestCaseRepository testCaseRepository,
@@ -63,10 +62,10 @@ public class JudgeRunningSubmissionService {
     }
 
     public void updateMaxJudgingThread(int maxJudgingThread) {
-        temporaryStop = true;
+        temporaryStopJudging = true;
         while (judgingThread() > 0) ;
         executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(maxJudgingThread);
-        temporaryStop = false;
+        temporaryStopJudging = false;
     }
 
     public void enableJudgeContest() {
@@ -90,11 +89,11 @@ public class JudgeRunningSubmissionService {
     }
 
     private synchronized void process() {
-        if (temporaryStop)
+        if (temporaryStopJudging)
             return;
         if (allThreadsAreActive())
             return;
-        RunningSubmission runningSubmission = runningSubmissionRepository.claim(serviceToCreates);
+        final RunningSubmission runningSubmission = runningSubmissionRepository.claim(serviceToCreates);
         if (runningSubmission != null) {
             executor.submit(new Runnable() {
                 @Override
@@ -110,19 +109,19 @@ public class JudgeRunningSubmissionService {
     }
 
     private void judgeSubmission(RunningSubmission runningSubmission) throws IOException, InterruptedException {
-        List<TestCase> testCases = TestCase.sortByOrdinal(
+        final List<TestCase> testCases = TestCase.sortByOrdinal(
                 testCaseRepository.getByProblemId(
                         runningSubmission.getProblemId(),
                         runningSubmission.getServiceToCreate()
                 )
         );
-        Problem problem = problemRepository.getById(
+        final Problem problem = problemRepository.getById(
                 runningSubmission.getProblemId(),
                 runningSubmission.getServiceToCreate()
         );
         Millisecond maxRunTime = new Millisecond(0L);
         KB maxMem = new KB(0);
-        int start = Math.max(
+        final int start = Math.max(
                 0,
                 runningSubmission.getJudgingTestCase() - 1
         );
@@ -131,11 +130,11 @@ public class JudgeRunningSubmissionService {
             runningSubmission.setTotalTestCases(testCases.size());
             runningSubmissionRepository.updateClaimed(runningSubmission);
 
-            TestCase testCase = testCases.get(i);
-            MemoryLimit memoryLimit = problem.getMemoryLimitByProgrammingLanguage(
+            final TestCase testCase = testCases.get(i);
+            final MemoryLimit memoryLimit = problem.getMemoryLimitByProgrammingLanguage(
                     runningSubmission.getProgrammingLanguage()
             );
-            TimeLimit timeLimit = problem.getTimeLimitByProgrammingLanguage(
+            final TimeLimit timeLimit = problem.getTimeLimitByProgrammingLanguage(
                     runningSubmission.getProgrammingLanguage()
             );
             VirtualMachine.RunResult runResult = virtualMachine.run(
@@ -147,111 +146,81 @@ public class JudgeRunningSubmissionService {
             maxRunTime = Millisecond.max(maxRunTime, runResult.runTime());
             Submission submission = null;
             if (memoryLimit == null) {
-                submission = Submission.createWithId(
-                        runningSubmission.getId(),
-                        runningSubmission.getProblemId(),
-                        runningSubmission.getProgrammingLanguage(),
+                submission = Submission.fromRunningSubmission(
+                        runningSubmission,
                         maxRunTime,
                         maxMem,
-                        runningSubmission.getCode(),
                         Status.STDE,
                         FailedTestCaseDetail.fromTestCase(
                                 0,
                                 "",
                                 testCase
                         ),
-                        runningSubmission.getServiceToCreate(),
-                        runningSubmission.getCoderId(),
                         "No memory limit."
                 );
             } else if (timeLimit == null) {
-                submission = Submission.createWithId(
-                        runningSubmission.getId(),
-                        runningSubmission.getProblemId(),
-                        runningSubmission.getProgrammingLanguage(),
+                submission = Submission.fromRunningSubmission(
+                        runningSubmission,
                         maxRunTime,
                         maxMem,
-                        runningSubmission.getCode(),
                         Status.STDE,
                         FailedTestCaseDetail.fromTestCase(
                                 0,
                                 "",
                                 testCase
                         ),
-                        runningSubmission.getServiceToCreate(),
-                        runningSubmission.getCoderId(),
                         "No time limit."
                 );
             } else if (runResult.compilationError()) {
-                submission = Submission.createWithId(
-                        runningSubmission.getId(),
-                        runningSubmission.getProblemId(),
-                        runningSubmission.getProgrammingLanguage(),
+                submission = Submission.fromRunningSubmission(
+                        runningSubmission,
                         maxRunTime,
                         maxMem,
-                        runningSubmission.getCode(),
                         Status.CE,
                         FailedTestCaseDetail.fromTestCase(
                                 0,
                                 "",
                                 testCase
                         ),
-                        runningSubmission.getServiceToCreate(),
-                        runningSubmission.getCoderId(),
                         runResult.compilationMessage()
                 );
             } else if (runResult.stdError()) {
-                submission = Submission.createWithId(
-                        runningSubmission.getId(),
-                        runningSubmission.getProblemId(),
-                        runningSubmission.getProgrammingLanguage(),
+                submission = Submission.fromRunningSubmission(
+                        runningSubmission,
                         maxRunTime,
                         maxMem,
-                        runningSubmission.getCode(),
                         Status.STDE,
                         FailedTestCaseDetail.fromTestCase(
                                 0,
                                 "",
                                 testCase
                         ),
-                        runningSubmission.getServiceToCreate(),
-                        runningSubmission.getCoderId(),
                         runResult.stdMessage()
                 );
             } else if (runResult.memory().greaterThan(memoryLimit.getMemoryLimit())) {
-                submission = Submission.createWithId(
-                        runningSubmission.getId(),
-                        runningSubmission.getProblemId(),
-                        runningSubmission.getProgrammingLanguage(),
+                submission = Submission.fromRunningSubmission(
+                        runningSubmission,
                         maxRunTime,
                         maxMem,
-                        runningSubmission.getCode(),
                         Status.MLE,
                         FailedTestCaseDetail.fromTestCase(
                                 0,
                                 runResult.output().toString(),
                                 testCase
                         ),
-                        runningSubmission.getServiceToCreate(),
-                        runningSubmission.getCoderId(),
                         runResult.stdMessage()
                 );
             } else if (runResult.runTime().greaterThan(timeLimit.getTimeLimit())) {
-                submission = Submission.createWithId(
-                        runningSubmission.getId(),
-                        runningSubmission.getProblemId(),
-                        runningSubmission.getProgrammingLanguage(),
+                submission = Submission.fromRunningSubmission(
+                        runningSubmission,
                         maxRunTime,
                         maxMem,
-                        runningSubmission.getCode(),
                         Status.TLE,
                         FailedTestCaseDetail.fromTestCase(
                                 0,
                                 runResult.output().toString(),
                                 testCase
                         ),
-                        runningSubmission.getServiceToCreate(),
-                        runningSubmission.getCoderId(),
                         runResult.stdMessage()
                 );
             } else {
@@ -260,35 +229,25 @@ public class JudgeRunningSubmissionService {
                         runResult.output()
                 );
                 if (!compareResult.equal) {
-                    submission = Submission.createWithId(
-                            runningSubmission.getId(),
-                            runningSubmission.getProblemId(),
-                            runningSubmission.getProgrammingLanguage(),
+                    submission = Submission.fromRunningSubmission(
+                            runningSubmission,
                             maxRunTime,
                             maxMem,
-                            runningSubmission.getCode(),
                             Status.WA,
                             FailedTestCaseDetail.fromTestCase(
                                     compareResult.differentLine,
                                     runResult.output().toString(),
                                     testCase
                             ),
-                            runningSubmission.getServiceToCreate(),
-                            runningSubmission.getCoderId(),
                             runResult.stdMessage()
                     );
                 } else {
-                    submission = Submission.createWithId(
-                            runningSubmission.getId(),
-                            runningSubmission.getProblemId(),
-                            runningSubmission.getProgrammingLanguage(),
+                    submission = Submission.fromRunningSubmission(
+                            runningSubmission,
                             maxRunTime,
                             maxMem,
-                            runningSubmission.getCode(),
                             Status.AC,
                             null,
-                            runningSubmission.getServiceToCreate(),
-                            runningSubmission.getCoderId(),
                             runResult.stdMessage()
                     );
                 }
@@ -301,7 +260,7 @@ public class JudgeRunningSubmissionService {
         }
     }
 
-    @Transactional(isolation = Isolation.READ_UNCOMMITTED)
+    @Transactional(isolation = Isolation.READ_UNCOMMITTED, rollbackFor = Throwable.class)
     private void saveSubmission(Submission submission, RunningSubmission runningSubmission) {
         runningSubmissionRepository.delete(runningSubmission.getId());
         submissionRepository.save(submission);
