@@ -13,6 +13,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @Service
 public class JudgeRunningSubmissionService {
@@ -24,7 +25,7 @@ public class JudgeRunningSubmissionService {
     private final SubmissionRepository submissionRepository;
     private final SubmissionEventRepository submissionEventRepository;
     private final RunningSubmissionConfig runningSubmissionConfig;
-    private boolean temporaryStopJudging = false;
+    private AtomicBoolean stopJudge = new AtomicBoolean(false);
     private final String CONTEST_SERVICE_TO_CREATE = "contest";
     private final String PRACTICE_PROBLEM_SERVICE_TO_CREATE = "PracticeProblemService";
     private final List<String> serviceToCreates = Arrays.asList(CONTEST_SERVICE_TO_CREATE, PRACTICE_PROBLEM_SERVICE_TO_CREATE);
@@ -53,6 +54,10 @@ public class JudgeRunningSubmissionService {
         }).start();
     }
 
+    public String getVMUrl() {
+        return runningSubmissionConfig.getVirtualMachineUrl();
+    }
+
     public int judgingThread() {
         return executor.getActiveCount();
     }
@@ -62,10 +67,18 @@ public class JudgeRunningSubmissionService {
     }
 
     public void updateMaxJudgingThread(int maxJudgingThread) {
-        temporaryStopJudging = true;
+        stop();
         while (judgingThread() > 0) ;
         executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(maxJudgingThread);
-        temporaryStopJudging = false;
+        start();
+    }
+
+    public void stop() {
+        stopJudge.set(true);
+    }
+
+    public void start() {
+        stopJudge.set(false);
     }
 
     public void enableJudgeContest() {
@@ -89,7 +102,7 @@ public class JudgeRunningSubmissionService {
     }
 
     private synchronized void process() {
-        if (temporaryStopJudging)
+        if (stopJudge.get())
             return;
         if (allThreadsAreActive())
             return;

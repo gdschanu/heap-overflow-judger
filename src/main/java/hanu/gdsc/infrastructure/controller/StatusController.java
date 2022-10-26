@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.lang.management.ManagementFactory;
 
 @RestController
-public class HealthController {
+public class StatusController {
     @Autowired
     JudgeRunningSubmissionService judgeRunningSubmissionService;
 
@@ -24,10 +24,11 @@ public class HealthController {
         public long ramUsage;
         public int maxJudgingThread;
         public int judgingThread;
+        public String virtualMachineUrl;
     }
 
-    @GetMapping("/healthcheck")
-    public ResponseEntity<?> healthCheck() {
+    @GetMapping("/status")
+    public ResponseEntity<?> status() {
         OperatingSystemMXBean osBean = ManagementFactory.getPlatformMXBean(OperatingSystemMXBean.class);
         Output output = Output.builder()
                 .cpuCores(Runtime.getRuntime().availableProcessors())
@@ -36,6 +37,7 @@ public class HealthController {
                 .ramUsage(Runtime.getRuntime().totalMemory())
                 .maxJudgingThread(judgeRunningSubmissionService.maxJudgingThread())
                 .judgingThread(judgeRunningSubmissionService.maxJudgingThread())
+                .virtualMachineUrl(judgeRunningSubmissionService.getVMUrl())
                 .build();
         return new ResponseEntity<>(output, HttpStatus.OK);
     }
