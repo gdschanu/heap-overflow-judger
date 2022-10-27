@@ -12,10 +12,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class ConfigurationController {
     @Autowired
     private JudgeRunningSubmissionService judgeRunningSubmissionService;
-    private final String contestServiceToCreate = "ContestService";
-    private final String practiceProblemServiceToCreate = "PracticeProblemService";
-
-
     public static class Input {
         public int maxJudgingThread;
     }
