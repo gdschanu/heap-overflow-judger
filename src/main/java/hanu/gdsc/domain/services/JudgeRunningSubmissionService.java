@@ -25,7 +25,7 @@ public class JudgeRunningSubmissionService {
     private final SubmissionRepository submissionRepository;
     private final SubmissionEventRepository submissionEventRepository;
     private final RunningSubmissionConfig runningSubmissionConfig;
-    private AtomicBoolean stopJudge = new AtomicBoolean(false);
+    private final AtomicBoolean stopJudge = new AtomicBoolean(false);
     private final String CONTEST_SERVICE_TO_CREATE = "ContestService";
     private final String PRACTICE_PROBLEM_SERVICE_TO_CREATE = "PracticeProblemService";
     private final List<String> serviceToCreates = Arrays.asList(CONTEST_SERVICE_TO_CREATE, PRACTICE_PROBLEM_SERVICE_TO_CREATE);
