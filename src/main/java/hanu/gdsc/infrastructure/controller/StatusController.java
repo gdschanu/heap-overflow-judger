@@ -36,7 +36,7 @@ public class StatusController {
                 .ram(Runtime.getRuntime().maxMemory())
                 .ramUsage(Runtime.getRuntime().totalMemory())
                 .maxJudgingThread(judgeRunningSubmissionService.maxJudgingThread())
-                .judgingThread(judgeRunningSubmissionService.maxJudgingThread())
+                .judgingThread(judgeRunningSubmissionService.judgingThread())
                 .virtualMachineUrl(judgeRunningSubmissionService.getVMUrl())
                 .build();
         return new ResponseEntity<>(output, HttpStatus.OK);
