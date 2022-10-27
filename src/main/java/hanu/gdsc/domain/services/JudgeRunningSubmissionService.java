@@ -273,7 +273,7 @@ public class JudgeRunningSubmissionService {
         }
     }
 
-    @Transactional(isolation = Isolation.READ_UNCOMMITTED, rollbackFor = Throwable.class)
+    @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Throwable.class)
     private void saveSubmission(Submission submission, RunningSubmission runningSubmission) {
         runningSubmissionRepository.delete(runningSubmission.getId());
         submissionRepository.save(submission);
