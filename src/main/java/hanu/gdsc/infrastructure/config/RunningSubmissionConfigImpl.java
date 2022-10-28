@@ -7,13 +7,14 @@ import org.springframework.core.env.Environment;
 @Configuration
 public class RunningSubmissionConfigImpl implements RunningSubmissionConfig {
 
-    private static int MAX_THREAD = 2;
-    private static int SCAN_RATE_MILLIS = 5000;
-    private static int SCAN_LOCK_SECOND = 60 * 5;
+    private int MAX_THREAD = 2;
+    private int SCAN_RATE_MILLIS = 5000;
+    private int SCAN_LOCK_SECOND = 60 * 5;
 
-    private static String VM_URL = "http://103.183.113.65:2358";
-    private static String VM_TOKEN = "poopoopeepee";
-    private static String VM_USER = "yowtf";
+    private String VM_URL = "http://103.183.113.65:2358";
+    private String VM_TOKEN = "poopoopeepee";
+    private String VM_USER = "yowtf";
+    private boolean VM_DEL_SUBMISSION = false;
 
     public RunningSubmissionConfigImpl(Environment environment) {
         if (environment.getProperty("runningsubmission.maxthread") != null) {
@@ -33,6 +34,9 @@ public class RunningSubmissionConfigImpl implements RunningSubmissionConfig {
         }
         if (environment.getProperty("runningsubmission.vmuser") != null) {
             VM_USER = environment.getProperty("runningsubmission.vmuser");
+        }
+        if (environment.getProperty("runningSubmission.vmdeletesubmission") != null) {
+            VM_DEL_SUBMISSION = environment.getProperty("runningSubmission.vmdeletesubmission").equals("true");
         }
     }
 
@@ -64,5 +68,10 @@ public class RunningSubmissionConfigImpl implements RunningSubmissionConfig {
     @Override
     public String getVirtualMachineUser() {
         return VM_USER;
+    }
+
+    @Override
+    public boolean getVirtualMachineDeleteSubmission() {
+        return VM_DEL_SUBMISSION;
     }
 }

@@ -12,4 +12,6 @@ public interface RunningSubmissionConfig {
     public String getVirtualMachineToken();
 
     public String getVirtualMachineUser();
+
+    public boolean getVirtualMachineDeleteSubmission();
 }

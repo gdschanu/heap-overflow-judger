@@ -189,6 +189,9 @@ public class VirtualMachineImpl implements VirtualMachine {
     }
 
     private void deleteSubmission(String submissionToDelete) {
+        if (!runningSubmissionConfig.getVirtualMachineDeleteSubmission()) {
+            return;
+        }
         HttpRequest httpReq = HttpRequest.newBuilder()
                 .uri(URI.create(runningSubmissionConfig.getVirtualMachineUrl() + "/submissions/" + submissionToDelete))
                 .header("content-type", "application/json")
