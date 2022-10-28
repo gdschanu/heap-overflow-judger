@@ -3,10 +3,12 @@ package hanu.gdsc.domain.models;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import hanu.gdsc.domain.exceptions.InvalidInputException;
+import hanu.gdsc.infrastructure.json.IdSerializer;
 import org.bson.types.ObjectId;
 
 import java.util.Objects;
 
+@JsonSerialize(using = IdSerializer.class)
 public class Id {
     private String value;
 

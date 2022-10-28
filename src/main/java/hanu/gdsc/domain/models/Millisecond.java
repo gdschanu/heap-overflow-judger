@@ -1,5 +1,9 @@
 package hanu.gdsc.domain.models;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import hanu.gdsc.infrastructure.json.MillisecondSerializer;
+
+@JsonSerialize(using = MillisecondSerializer.class)
 public class Millisecond {
     private long value;
 

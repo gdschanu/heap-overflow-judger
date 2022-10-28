@@ -1,10 +1,14 @@
 package hanu.gdsc.domain.models;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import hanu.gdsc.infrastructure.json.DateTimeSerializer;
+
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Objects;
 
+@JsonSerialize(using = DateTimeSerializer.class)
 public class DateTime {
     private ZonedDateTime value;
 

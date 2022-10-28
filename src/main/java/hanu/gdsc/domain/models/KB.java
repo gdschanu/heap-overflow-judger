@@ -2,7 +2,9 @@ package hanu.gdsc.domain.models;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import hanu.gdsc.infrastructure.json.KBSerializer;
 
+@JsonSerialize(using = KBSerializer.class)
 public class KB {
     private double value;
 
