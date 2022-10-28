@@ -2,7 +2,11 @@ package hanu.gdsc.domain.services;
 
 import hanu.gdsc.domain.config.RunningSubmissionConfig;
 import hanu.gdsc.domain.models.*;
-import hanu.gdsc.domain.repositories.*;
+import hanu.gdsc.domain.publisher.SubmissionEventPublisher;
+import hanu.gdsc.domain.repositories.ProblemRepository;
+import hanu.gdsc.domain.repositories.RunningSubmissionRepository;
+import hanu.gdsc.domain.repositories.SubmissionRepository;
+import hanu.gdsc.domain.repositories.TestCaseRepository;
 import hanu.gdsc.domain.vm.VirtualMachine;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
@@ -23,7 +27,7 @@ public class JudgeRunningSubmissionService {
     private final VirtualMachine virtualMachine;
     private final ProblemRepository problemRepository;
     private final SubmissionRepository submissionRepository;
-    private final SubmissionEventRepository submissionEventRepository;
+    private final SubmissionEventPublisher submissionEventPublisher;
     private final RunningSubmissionConfig runningSubmissionConfig;
     private final AtomicBoolean stopJudge = new AtomicBoolean(false);
     private final String CONTEST_SERVICE_TO_CREATE = "ContestService";
@@ -35,14 +39,14 @@ public class JudgeRunningSubmissionService {
                                          VirtualMachine virtualMachine,
                                          ProblemRepository problemRepository,
                                          SubmissionRepository submissionRepository,
-                                         SubmissionEventRepository submissionEventRepository,
+                                         SubmissionEventPublisher submissionEventPublisher,
                                          RunningSubmissionConfig runningSubmissionConfig) {
         this.runningSubmissionRepository = runningSubmissionRepository;
         this.testCaseRepository = testCaseRepository;
         this.virtualMachine = virtualMachine;
         this.problemRepository = problemRepository;
         this.submissionRepository = submissionRepository;
-        this.submissionEventRepository = submissionEventRepository;
+        this.submissionEventPublisher = submissionEventPublisher;
         this.runningSubmissionConfig = runningSubmissionConfig;
 
         executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(runningSubmissionConfig.getMaxJudgingThread());
@@ -277,12 +281,10 @@ public class JudgeRunningSubmissionService {
     private void saveSubmission(Submission submission, RunningSubmission runningSubmission) {
         runningSubmissionRepository.delete(runningSubmission.getId());
         submissionRepository.save(submission);
-        submissionEventRepository.save(
-                SubmissionEvent.create(
-                        runningSubmission.getProblemId(),
-                        submission.getStatus(),
-                        submission.getCoderId()
-                )
-        );
+        submissionEventPublisher.publish(SubmissionEvent.create(
+                runningSubmission.getProblemId(),
+                submission.getStatus(),
+                submission.getCoderId()
+        ));
     }
 }
