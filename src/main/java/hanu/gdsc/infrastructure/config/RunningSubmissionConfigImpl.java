@@ -4,6 +4,10 @@ import hanu.gdsc.domain.config.RunningSubmissionConfig;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Configuration
 public class RunningSubmissionConfigImpl implements RunningSubmissionConfig {
 
@@ -11,10 +15,10 @@ public class RunningSubmissionConfigImpl implements RunningSubmissionConfig {
     private int SCAN_RATE_MILLIS = 5000;
     private int SCAN_LOCK_SECOND = 60 * 5;
 
-    private String VM_URL = "http://103.183.113.65:2358";
+    private List<String> VM_URL = List.of("http://103.183.113.65:2358");
     private String VM_TOKEN = "poopoopeepee";
     private String VM_USER = "yowtf";
-    private boolean VM_DEL_SUBMISSION = false;
+    private boolean VM_DEL_SUBMISSION = true;
 
     public RunningSubmissionConfigImpl(Environment environment) {
         if (environment.getProperty("runningsubmission.maxthread") != null) {
@@ -26,8 +30,11 @@ public class RunningSubmissionConfigImpl implements RunningSubmissionConfig {
         if (environment.getProperty("runningsubmission.scanlocksecond") != null) {
             SCAN_LOCK_SECOND = Integer.parseInt(environment.getProperty("runningsubmission.scanlocksecond"));
         }
-        if (environment.getProperty("runningsubmission.vmurl") != null) {
-            VM_URL = environment.getProperty("runningsubmission.vmurl");
+        if (environment.getProperty("runningsubmission.vmurls") != null) {
+            VM_URL = Arrays.stream(environment.getProperty("runningsubmission.vmurls")
+                            .split(","))
+                    .map(v -> v)
+                    .collect(Collectors.toList());
         }
         if (environment.getProperty("runningsubmission.vmtoken") != null) {
             VM_TOKEN = environment.getProperty("runningsubmission.vmtoken");
@@ -56,7 +63,7 @@ public class RunningSubmissionConfigImpl implements RunningSubmissionConfig {
     }
 
     @Override
-    public String getVirtualMachineUrl() {
+    public List<String> getVirtualMachineUrls() {
         return VM_URL;
     }
 

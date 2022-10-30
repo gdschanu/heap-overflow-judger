@@ -26,6 +26,15 @@ public class VirtualMachineImpl implements VirtualMachine {
         this.runningSubmissionConfig = runningSubmissionConfig;
     }
 
+    private int currentVMUrlIndex = 0;
+
+    private String getVMUrl() {
+        currentVMUrlIndex++;
+        if (currentVMUrlIndex >= runningSubmissionConfig.getVirtualMachineUrls().size())
+            currentVMUrlIndex = 0;
+        return runningSubmissionConfig.getVirtualMachineUrls().get(currentVMUrlIndex);
+    }
+
     private String base64Encode(String s) {
         if (s == null) return s;
         return new String(Base64.getEncoder().encode(s.getBytes()));
@@ -66,7 +75,7 @@ public class VirtualMachineImpl implements VirtualMachine {
         request.cpu_time_limit = TimeLimit.MAX.toSecond();
         String requestString = objectMapper.writeValueAsString(request);
         HttpRequest httpReq = HttpRequest.newBuilder()
-                .uri(URI.create(runningSubmissionConfig.getVirtualMachineUrl() + "/submissions" + "?base64_encoded=true&fields=*&wait=true"))
+                .uri(URI.create(getVMUrl() + "/submissions" + "?base64_encoded=true&fields=*&wait=true"))
                 .header("content-type", "application/json")
                 .header("X-Auth-Token", runningSubmissionConfig.getVirtualMachineToken())
                 .method("POST", HttpRequest.BodyPublishers.ofString(requestString))
@@ -193,7 +202,7 @@ public class VirtualMachineImpl implements VirtualMachine {
             return;
         }
         HttpRequest httpReq = HttpRequest.newBuilder()
-                .uri(URI.create(runningSubmissionConfig.getVirtualMachineUrl() + "/submissions/" + submissionToDelete))
+                .uri(URI.create(getVMUrl() + "/submissions/" + submissionToDelete))
                 .header("content-type", "application/json")
                 .header("X-Auth-Token", runningSubmissionConfig.getVirtualMachineToken())
                 .header("X-Auth-User", runningSubmissionConfig.getVirtualMachineUser())

@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.lang.management.ManagementFactory;
+import java.util.List;
 
 @RestController
 public class StatusController {
@@ -24,7 +25,7 @@ public class StatusController {
         public long ramUsage;
         public int maxJudgingThread;
         public int judgingThread;
-        public String virtualMachineUrl;
+        public List<String> virtualMachineUrls;
     }
 
     @GetMapping("/status")
@@ -37,7 +38,7 @@ public class StatusController {
                 .ramUsage(Runtime.getRuntime().totalMemory())
                 .maxJudgingThread(judgeRunningSubmissionService.maxJudgingThread())
                 .judgingThread(judgeRunningSubmissionService.judgingThread())
-                .virtualMachineUrl(judgeRunningSubmissionService.getVMUrl())
+                .virtualMachineUrls(judgeRunningSubmissionService.getVMUrls())
                 .build();
         return new ResponseEntity<>(output, HttpStatus.OK);
     }

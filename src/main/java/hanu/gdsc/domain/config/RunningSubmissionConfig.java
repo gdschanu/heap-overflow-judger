@@ -1,5 +1,7 @@
 package hanu.gdsc.domain.config;
 
+import java.util.List;
+
 public interface RunningSubmissionConfig {
     public int getMaxJudgingThread();
 
@@ -7,7 +9,7 @@ public interface RunningSubmissionConfig {
 
     public int getScanLockSecond();
 
-    public String getVirtualMachineUrl();
+    public List<String> getVirtualMachineUrls();
 
     public String getVirtualMachineToken();
 

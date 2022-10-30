@@ -58,8 +58,8 @@ public class JudgeRunningSubmissionService {
         }).start();
     }
 
-    public String getVMUrl() {
-        return runningSubmissionConfig.getVirtualMachineUrl();
+    public List<String> getVMUrls() {
+        return runningSubmissionConfig.getVirtualMachineUrls();
     }
 
     public int judgingThread() {
