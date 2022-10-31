@@ -2,6 +2,7 @@ package hanu.gdsc.infrastructure.controller;
 
 import com.sun.management.OperatingSystemMXBean;
 import hanu.gdsc.domain.services.JudgeRunningSubmissionService;
+import hanu.gdsc.infrastructure.config.ServerConfig;
 import lombok.Builder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -15,10 +16,13 @@ import java.util.List;
 @RestController
 public class StatusController {
     @Autowired
-    JudgeRunningSubmissionService judgeRunningSubmissionService;
+    private JudgeRunningSubmissionService judgeRunningSubmissionService;
+    @Autowired
+    private ServerConfig serverConfig;
 
     @Builder
     public static class Output {
+        public String ipAddress;
         public int cpuCores;
         public double cpuUsage;
         public long ram;
@@ -39,6 +43,7 @@ public class StatusController {
                 .maxJudgingThread(judgeRunningSubmissionService.maxJudgingThread())
                 .judgingThread(judgeRunningSubmissionService.judgingThread())
                 .virtualMachineUrls(judgeRunningSubmissionService.getVMUrls())
+                .ipAddress(serverConfig.getIpAddress())
                 .build();
         return new ResponseEntity<>(output, HttpStatus.OK);
     }
