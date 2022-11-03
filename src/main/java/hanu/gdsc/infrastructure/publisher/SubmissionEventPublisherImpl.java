@@ -15,15 +15,15 @@ import java.util.List;
 public class SubmissionEventPublisherImpl implements SubmissionEventPublisher {
     @Autowired
     private AmqpTemplate rabbitTemplate;
-    private static final String SUBMISSIONEVENTQUEUE = "Q_COREPROBLEM_SUBMISSIONEVENT";
+    private static final String EXCHANGE = "E_COREPROBLEM_SUBMISSIONEVENT";
 
     @Override
     public void publish(SubmissionEvent submissionEvent) {
-        rabbitTemplate.convertAndSend(SUBMISSIONEVENTQUEUE, submissionEvent);
+        rabbitTemplate.convertAndSend(EXCHANGE, "", submissionEvent);
     }
 
     @Bean
-    public Queue submissionEventQueue() {
-        return new Queue(SUBMISSIONEVENTQUEUE, true);
+    public FanoutExchange fanout() {
+        return new FanoutExchange(EXCHANGE);
     }
 }
