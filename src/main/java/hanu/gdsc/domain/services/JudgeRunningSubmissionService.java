@@ -271,20 +271,32 @@ public class JudgeRunningSubmissionService {
             }
 
             if (i == testCases.size() - 1 || !submission.getStatus().equals(Status.AC)) {
-                saveSubmission(submission, runningSubmission);
+                saveSubmission(
+                        submission,
+                        runningSubmission,
+                        submission.getStatus().equals(Status.AC) ? testCases.size() : i,
+                        testCases.size()
+                );
                 break;
             }
         }
     }
 
     @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Throwable.class)
-    private void saveSubmission(Submission submission, RunningSubmission runningSubmission) {
+    private void saveSubmission(Submission submission,
+                                RunningSubmission runningSubmission,
+                                int passedTestCasesCount,
+                                int totalTestCasesCount) {
         runningSubmissionRepository.delete(runningSubmission.getId());
         submissionRepository.save(submission);
         submissionEventPublisher.publish(SubmissionEvent.create(
                 runningSubmission.getProblemId(),
                 submission.getStatus(),
-                submission.getCoderId()
+                submission.getCoderId(),
+                runningSubmission.getSubmittedAt(),
+                passedTestCasesCount,
+                totalTestCasesCount,
+                runningSubmission.getServiceToCreate()
         ));
     }
 }
