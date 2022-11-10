@@ -280,6 +280,9 @@ public class JudgeRunningSubmissionService {
                 break;
             }
         }
+        if (testCases.size() == 0) {
+            runningSubmissionRepository.delete(runningSubmission.getId());
+        }
     }
 
     @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Throwable.class)

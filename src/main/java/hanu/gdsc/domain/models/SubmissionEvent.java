@@ -60,4 +60,20 @@ public class SubmissionEvent extends IdentifiedDomainObject {
     public Id getCoderId() {
         return coderId;
     }
+
+    public DateTime getSubmittedAt() {
+        return submittedAt;
+    }
+
+    public int getPassedTestCasesCount() {
+        return passedTestCasesCount;
+    }
+
+    public int getTotalTestCasesCount() {
+        return totalTestCasesCount;
+    }
+
+    public String getServiceToCreate() {
+        return serviceToCreate;
+    }
 }

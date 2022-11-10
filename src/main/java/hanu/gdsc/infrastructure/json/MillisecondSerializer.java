@@ -8,7 +8,6 @@ import hanu.gdsc.domain.models.Millisecond;
 
 import java.io.IOException;
 
-@JsonSerialize(using = MillisecondSerializer.class)
 public class MillisecondSerializer extends StdSerializer<Millisecond> {
     protected MillisecondSerializer() {
         this(null);
