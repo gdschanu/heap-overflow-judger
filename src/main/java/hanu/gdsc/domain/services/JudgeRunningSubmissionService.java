@@ -125,6 +125,7 @@ public class JudgeRunningSubmissionService {
         }
     }
 
+    @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Throwable.class)
     private void judgeSubmission(RunningSubmission runningSubmission) throws IOException, InterruptedException {
         final List<TestCase> testCases = TestCase.sortByOrdinal(
                 testCaseRepository.getByProblemId(
@@ -285,7 +286,6 @@ public class JudgeRunningSubmissionService {
         }
     }
 
-    @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Throwable.class)
     private void saveSubmission(Submission submission,
                                 RunningSubmission runningSubmission,
                                 int passedTestCasesCount,

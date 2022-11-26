@@ -1,6 +1,7 @@
 package hanu.gdsc.infrastructure.repositories.submission;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import hanu.gdsc.domain.models.*;
 import hanu.gdsc.domain.models.DateTime;
 import lombok.*;
@@ -62,6 +63,7 @@ public class SubmissionEntity {
                     .build();
             return e;
         } catch (Exception e) {
+            e.printStackTrace();
             throw new Error(e);
         }
     }
@@ -102,5 +104,24 @@ public class SubmissionEntity {
             e.printStackTrace();
             throw new Error(e);
         }
+    }
+
+    @Override
+    public String toString() {
+        return "SubmissionEntity{" +
+                "id='" + id + '\'' +
+                ", problemId='" + problemId + '\'' +
+                ", coderId='" + coderId + '\'' +
+                ", programmingLanguage='" + programmingLanguage + '\'' +
+                ", runTimeInMillis=" + runTimeInMillis +
+                ", memoryInKB=" + memoryInKB +
+                ", submittedAtInZonedDateTime='" + submittedAtInZonedDateTime + '\'' +
+                ", code='" + code + '\'' +
+                ", status='" + status + '\'' +
+                ", failedTestCaseDetail='" + failedTestCaseDetail + '\'' +
+                ", serviceToCreate='" + serviceToCreate + '\'' +
+                ", message='" + message + '\'' +
+                ", submittedAtMillis=" + submittedAtMillis +
+                '}';
     }
 }
