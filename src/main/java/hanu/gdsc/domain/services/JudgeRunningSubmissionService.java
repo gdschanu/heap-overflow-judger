@@ -98,7 +98,7 @@ public class JudgeRunningSubmissionService {
     }
 
     public void disableJudgePracticeProblem() {
-        serviceToCreates.add(PRACTICE_PROBLEM_SERVICE_TO_CREATE);
+        serviceToCreates.remove(PRACTICE_PROBLEM_SERVICE_TO_CREATE);
     }
 
     private boolean allThreadsAreActive() {
